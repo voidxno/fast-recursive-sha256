@@ -1,11 +1,11 @@
 /*
- * File: rec_sha256_reference.cxx
+ * File: rec_sha256_fast.cxx
  *
  * Author: voidxno
  * Created: 12 Jun 2023
  * Source: https://github.com/voidxno/fast-recursive-sha256
  *
- * Reference recursive SHA256 function, with intrinsics and Intel SHA Extensions
+ * Fast recursive SHA256 function, with intrinsics and Intel SHA Extensions
  *
  * Requirement: Intel/AMD x64 CPU, with SHA extensions
  *
@@ -14,7 +14,6 @@
  *
  */
 
-#include <string.h>
 #include <stdint.h>
 
 #include <immintrin.h>
@@ -23,15 +22,9 @@
 #include <intrin.h>
 #endif
 
-#ifdef _WIN32
-#define bswap_32(x) _byteswap_ulong(x)
-#else
-#include <byteswap.h>
-#endif
-
-void rec_sha256_reference( //-- no return value, result to *hash
-uint8_t*       hash,       //-- input/output 32bytes hash/data SHA256 value
-const uint64_t num_iters)  //-- number of times to SHA256 32bytes given in *hash
+void rec_sha256_fast(     //-- no return value, result to *hash
+uint8_t*       hash,      //-- input/output 32bytes hash/data SHA256 value
+const uint64_t num_iters) //-- number of times to SHA256 32bytes given in *hash
 {
 
  //-- if 0 iterations, result is input hash/data
@@ -52,6 +45,14 @@ const uint64_t num_iters)  //-- number of times to SHA256 32bytes given in *hash
  //-- shuffle mask for byte order required by SHA Extensions
  const __m128i SHUF_MASK = _mm_set_epi64x(0x0C0D0E0F08090A0B,0x0405060700010203);
 
+ //-- pre-arranged/rotated init values for SHA256 rounds, 8x A-H logic
+ const __m128i ABEF_INIT = _mm_set_epi64x(0x6A09E667BB67AE85,0x510E527F9B05688C);
+ const __m128i CDGH_INIT = _mm_set_epi64x(0x3C6EF372A54FF53A,0x1F83D9AB5BE0CD19);
+
+ //-- pre-arranged/rotated values for 3rd/4th 16bytes of 1x block, SHA256 padding logic
+ const __m128i HPAD0_CACHE = _mm_set_epi64x(0x0000000000000000,0x0000000080000000);
+ const __m128i HPAD1_CACHE = _mm_set_epi64x(0x0000010000000000,0x0000000000000000);
+
  //-- variables to calculate SHA256 rounds
  __m128i STATE0;
  __m128i STATE1;
@@ -61,37 +62,23 @@ const uint64_t num_iters)  //-- number of times to SHA256 32bytes given in *hash
  __m128i MSGTMP2;
  __m128i MSGTMP3;
 
+ //-- variables to init/keep hash value through SHA256 rounds
+ __m128i HASH0_SAVE = _mm_loadu_si128((__m128i*)(&hash[0]));
+ __m128i HASH1_SAVE = _mm_loadu_si128((__m128i*)(&hash[16]));
+
+ //-- shuffle 32bytes hash/data given required by SHA Extensions
+ HASH0_SAVE = _mm_shuffle_epi8(HASH0_SAVE,SHUF_MASK);
+ HASH1_SAVE = _mm_shuffle_epi8(HASH1_SAVE,SHUF_MASK);
+
  //-- repeat SHA256 operation number of iterations
  for(uint64_t i = 0; i < num_iters; ++i){
 
-   //-- init values for SHA256 rounds, 8x A-H logic
-   uint32_t state[8] = {0x6A09E667,0xBB67AE85,0x3C6EF372,0xA54FF53A,0x510E527F,0x9B05688C,0x1F83D9AB,0x5BE0CD19};
-
-   //-- pre-process/padding, length=32, hash/data input
-   uint8_t last[64];
-   memcpy(last,hash,32);
-   memset(last + 32,0x00,32);
-   memcpy(last + 32,"\x80",1);
-   memcpy(last + 56,"\x00\x00\x00\x00\x00\x00\x01\x00",8);
-
    //-- init state values for SHA256 rounds
-   STATE0 = _mm_loadu_si128((__m128i*)(&state[0]));
-   STATE1 = _mm_loadu_si128((__m128i*)(&state[4]));
-
-   //-- shuffle 32bytes hash/data given required by SHA Extensions
-   STATE0 = _mm_shuffle_epi32(STATE0,0xB1); // CDAB
-   STATE1 = _mm_shuffle_epi32(STATE1,0x1B); // EFGH
-   MSGTMP0 = _mm_alignr_epi8(STATE0,STATE1,8);   // ABEF
-   STATE1 = _mm_blend_epi16(STATE1,STATE0,0xF0); // CDGH
-   STATE0 = MSGTMP0;
-
-   //-- save current state, 8x A-H logic
-   const __m128i ABEF_SAVE = STATE0;
-   const __m128i CDGH_SAVE = STATE1;
+   STATE0 = ABEF_INIT;
+   STATE1 = CDGH_INIT;
 
    //-- rounds 0-3
-   MSG = _mm_loadu_si128((__m128i*)(&last[0]));
-   MSG = _mm_shuffle_epi8(MSG,SHUF_MASK);
+   MSG = HASH0_SAVE;
    MSGTMP0 = MSG;
    MSG = _mm_add_epi32(MSG,_mm_load_si128((__m128i*)(&K64[0])));
    STATE1 = _mm_sha256rnds2_epu32(STATE1,STATE0,MSG);
@@ -99,8 +86,7 @@ const uint64_t num_iters)  //-- number of times to SHA256 32bytes given in *hash
    STATE0 = _mm_sha256rnds2_epu32(STATE0,STATE1,MSG);
 
    //-- rounds 4-7
-   MSG = _mm_loadu_si128((__m128i*)(&last[16]));
-   MSG = _mm_shuffle_epi8(MSG,SHUF_MASK);
+   MSG = HASH1_SAVE;
    MSGTMP1 = MSG;
    MSG = _mm_add_epi32(MSG,_mm_load_si128((__m128i*)(&K64[4])));
    STATE1 = _mm_sha256rnds2_epu32(STATE1,STATE0,MSG);
@@ -109,8 +95,7 @@ const uint64_t num_iters)  //-- number of times to SHA256 32bytes given in *hash
    MSGTMP0 = _mm_sha256msg1_epu32(MSGTMP0,MSGTMP1);
 
    //-- rounds 8-11
-   MSG = _mm_loadu_si128((__m128i*)(&last[32]));
-   MSG = _mm_shuffle_epi8(MSG,SHUF_MASK);
+   MSG = HPAD0_CACHE;
    MSGTMP2 = MSG;
    MSG = _mm_add_epi32(MSG,_mm_load_si128((__m128i*)(&K64[8])));
    STATE1 = _mm_sha256rnds2_epu32(STATE1,STATE0,MSG);
@@ -119,8 +104,7 @@ const uint64_t num_iters)  //-- number of times to SHA256 32bytes given in *hash
    MSGTMP1 = _mm_sha256msg1_epu32(MSGTMP1,MSGTMP2);
 
    //-- rounds 12-15
-   MSG = _mm_loadu_si128((__m128i*)(&last[48]));
-   MSG = _mm_shuffle_epi8(MSG,SHUF_MASK);
+   MSG = HPAD1_CACHE;
    MSGTMP3 = MSG;
    MSG = _mm_add_epi32(MSG,_mm_load_si128((__m128i*)(&K64[12])));
    STATE1 = _mm_sha256rnds2_epu32(STATE1,STATE0,MSG);
@@ -246,21 +230,23 @@ const uint64_t num_iters)  //-- number of times to SHA256 32bytes given in *hash
    STATE0 = _mm_sha256rnds2_epu32(STATE0,STATE1,MSG);
 
    //-- add previous/init hash values to current state
-   STATE0 = _mm_add_epi32(STATE0,ABEF_SAVE);
-   STATE1 = _mm_add_epi32(STATE1,CDGH_SAVE);
+   STATE0 = _mm_add_epi32(STATE0,ABEF_INIT);
+   STATE1 = _mm_add_epi32(STATE1,CDGH_INIT);
 
    //-- reorder hash correctly, save for next iteration or final result
    STATE0 = _mm_shuffle_epi32(STATE0,0x1B); // FEBA
    STATE1 = _mm_shuffle_epi32(STATE1,0xB1); // DCHG
-   _mm_storeu_si128((__m128i*)(&state[0]),_mm_blend_epi16(STATE0,STATE1,0xF0)); // DCBA
-   _mm_storeu_si128((__m128i*)(&state[4]),_mm_alignr_epi8(STATE1,STATE0,8));    // HGFE
-
-   //-- shuffle SHA Extensions hash value back to normal
-   for(int k = 0; k < 8; ++k){ state[k] = bswap_32(state[k]); }
-
-   //-- copy/save current hash value into *hash
-   memcpy(hash,state,32);
+   HASH0_SAVE = _mm_blend_epi16(STATE0,STATE1,0xF0); //-- DCBA
+   HASH1_SAVE = _mm_alignr_epi8(STATE1,STATE0,8);    //-- HGFE
    }
+
+ //-- shuffle SHA Extensions hash value back to normal
+ HASH0_SAVE = _mm_shuffle_epi8(HASH0_SAVE,SHUF_MASK);
+ HASH1_SAVE = _mm_shuffle_epi8(HASH1_SAVE,SHUF_MASK);
+
+ //-- copy/return final hash value into *hash
+ _mm_storeu_si128((__m128i*)(&hash[0]),HASH0_SAVE);
+ _mm_storeu_si128((__m128i*)(&hash[16]),HASH1_SAVE);
 }
 
 // <eof>
