@@ -37,7 +37,7 @@ const uint64_t num_iters) //-- number of times to SHA256 32bytes given in *hash
 
 ## Benchmark
 
-Intel 13th-gen CPU locked at **6.0 GHz** (Windows/VS2022): **42.09 MH/s**
+Intel 13th-gen CPU locked at **6.0 GHz** (Windows/VS2022): **42.48 MH/s**
 
 ![Console output Windows/VS2022](/media/benchmark.png "Console output Windows/VS2022 benchmark")
 
@@ -45,7 +45,7 @@ Look [BENCHMARK.md](BENCHMARK.md) for more information, and results.
 
 ## Optimization
 
-Look [OPTIMIZE.md](OPTIMIZE.md) for more information, and history.
+Look [OPTIMIZE.md](OPTIMIZE.md) for more information, background and [revisions](OPTIMIZE.md#revisions).
 
 ## Donation
 

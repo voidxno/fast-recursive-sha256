@@ -8,7 +8,7 @@ Intel [SHA Extensions](https://www.intel.com/content/www/us/en/developer/article
 
 Below are steps from generic implementation to final result.
 
-In reality there was an assembler (ASM) source code edition before C++ intrinsics. Look [history](#history) section.
+In reality there was an assembler (ASM) source code edition before C++ intrinsics. Look [background](#background) section.
 
 ## Step 1 - Generic SHA256
 
@@ -49,7 +49,7 @@ Last step is seeing loop for what it is:
 - See how they can be organized with focus on speed
 - While still maintaining consistency in logic performed
 
-Elements adjusted (link to [source code compare](https://github.com/voidxno/fast-recursive-sha256/commit/2a98f204a396a52ecf979d026ccc985d019995c8)):
+Elements adjusted:
 - Realize static nature of 3rd/4th 16 bytes of 1x block (64 bytes)
 - Convert/move/pre-rotate into 2x static __m128i (HPAD0_CACHE, HPAD1_CACHE)
 - Move/pre-rotate round init values into 2x static __mm128i (ABEF_INIT, CDGH_INIT)
@@ -84,7 +84,7 @@ Could also be other hardware contenders. Not observed anything beating a high-GH
 
 For a single SHA256 calculation, SHA Extensions looks to win the recursive/serial/single-thread race.
 
-## History
+## Background
 
 Started by having fun running a TimeLord on [MMX blockchain](https://github.com/madMAx43v3r/mmx-node). One thing is overclocking hardware, equally fun trying to optimize speed/efficiency through source code optimization.
 
@@ -96,12 +96,21 @@ Shifted at some point to try contributing by optimizing public C++ source code f
 
 Grew increasingly frustrated over extreme differences in TimeLord speed, depending on arrangement of source code and compiler used (VS2022, Clang15, gcc12). Wanted parity between platforms, if possible.
 
-Tried to understand C++ intrinsics. Wrote my own generic recursive SHA256 edition. Ported all optimizations from my private 0.702 (ASM) edition. Now at 0.701 (VS2022), 0.698 (Clang15), 0.689 (gcc12), look [benchmark](BENCHMARK.md). Good enough to call it a day.
+Tried to understand C++ intrinsics. Wrote my own generic recursive SHA256 edition. Ported all optimizations from my private 0.702 (ASM) edition. Now at 0.708 (VS2022), 0.708 (Clang15), 0.702 (gcc12), look [benchmark](BENCHMARK.md).
 
 Ended up here, open sourcing the result.
 
 Better for MMX to have best possible implementation. Making it easier going forward, improving surrounding aspect.
 
 My thanks to the MMX project, making me explore optimizations, learning new stuff in the process.
+
+## Revisions
+
+**2023.07.19** - AVX vs SSE4.2
+- Changed baseline compile architecture to [Intel AVX](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions) (not AVX2) vs SSE4.2.
+- Effect varies depending on CPU architecture. About +1% on Intel 13th-Gen.
+- In general a positive effect. Some older CPUs might work better with SSE4.2.
+- Restructured [rec_sha256_reference.cxx](rec_sha256_reference.cxx) with inner inline function.
+- Prevents major performance degradation when compiled with AVX vs SSE4.2.
 
 <!-- eof -->

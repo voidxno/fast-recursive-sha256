@@ -236,8 +236,8 @@ const uint64_t num_iters) //-- number of times to SHA256 32bytes given in *hash
    //-- reorder hash correctly, save for next iteration or final result
    STATE0 = _mm_shuffle_epi32(STATE0,0x1B); // FEBA
    STATE1 = _mm_shuffle_epi32(STATE1,0xB1); // DCHG
-   HASH0_SAVE = _mm_blend_epi16(STATE0,STATE1,0xF0); //-- DCBA
-   HASH1_SAVE = _mm_alignr_epi8(STATE1,STATE0,8);    //-- HGFE
+   HASH0_SAVE = _mm_blend_epi16(STATE0,STATE1,0xF0); // DCBA
+   HASH1_SAVE = _mm_alignr_epi8(STATE1,STATE0,8);    // HGFE
    }
 
  //-- shuffle SHA Extensions hash value back to normal
