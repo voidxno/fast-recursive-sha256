@@ -37,7 +37,7 @@ const uint64_t num_iters) //-- number of times to SHA256 32bytes given in *hash
 
 ## Benchmark
 
-Intel 13th-gen CPU locked at **6.0 GHz** (Windows/VS2022): **42.48 MH/s**
+Intel 13th-gen CPU P-core at **6.0 GHz** (Windows/VS2022): **42.48 MH/s**
 
 ![Console output Windows/VS2022](/media/benchmark.png "Console output Windows/VS2022 benchmark")
 
@@ -45,7 +45,7 @@ Look [BENCHMARK.md](BENCHMARK.md) for more information, and results.
 
 ## Optimization
 
-Look [OPTIMIZE.md](OPTIMIZE.md) for more information, background and [revisions](OPTIMIZE.md#revisions).
+Look [OPTIMIZE.md](OPTIMIZE.md) for more information, and [CHANGES.md](CHANGES.md) for revisions.
 
 ## Donation
 
@@ -54,6 +54,7 @@ If you find implementation useful, donations are welcome:
 `BTC:` `bc1qtl00g8lctmuud72rv5eqr6kkpt85ws0t2u9s8d`\
 `ETH:` `0x5fA8c257b502947A65D399906999D4FC373510B5`\
 `MMX:` `mmx1pk95pv4lj5k3y9cwxzuuyznjsgdkqsu7wkxz029nqnenjathtv7suf9qgc`\
-`XCH:` `xch1rk473wu3yqlxyyap4f4fhs8knzf4jt6aagtzka0g24hjgskmlv7qcme9gt`
+`XCH:` `xch1rk473wu3yqlxyyap4f4fhs8knzf4jt6aagtzka0g24hjgskmlv7qcme9gt`\
+`KAS:` `kaspa:qqjrwh00du33v4f78re4x3u50420fcvemuu3ye3wy2dhllxtjlhagf04g97hj`
 
 <!-- eof -->
