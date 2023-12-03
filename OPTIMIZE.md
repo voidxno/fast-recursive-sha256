@@ -19,7 +19,7 @@ void sha256(uint8_t* out, const uint8_t* in, const uint64_t length){ ... }
 
 Add recursive usage:
 ```c++
-void rec_sha256(uint8_t* hash,const uint64_t num_iters)
+void rec_sha256(uint8_t* hash, const uint64_t num_iters)
 {
  for(uint64_t i = 0; i < num_iters; ++i)
    sha256(hash,hash,32);
@@ -103,14 +103,5 @@ Ended up here, open sourcing the result.
 Better for MMX to have best possible implementation. Making it easier going forward, improving surrounding aspect.
 
 My thanks to the MMX project, making me explore optimizations, learning new stuff in the process.
-
-## Revisions
-
-**2023.07.19** - AVX vs SSE4.2
-- Changed baseline compile architecture to [Intel AVX](https://en.wikipedia.org/wiki/Advanced_Vector_Extensions) (not AVX2) vs SSE4.2.
-- Effect varies depending on CPU architecture. About +1% on Intel 13th-Gen.
-- In general a positive effect. Some older CPUs might work better with SSE4.2.
-- Restructured [rec_sha256_reference.cxx](rec_sha256_reference.cxx) with inner inline function.
-- Prevents major performance degradation when compiled with AVX vs SSE4.2.
 
 <!-- eof -->

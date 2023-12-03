@@ -6,7 +6,7 @@
  *
  * Benchmark of fast recursive SHA256, with intrinsics and Intel SHA Extensions
  *
- * Program call: benchmark -i <iters> -s <cpuspeed>
+ * Program call: benchmark -i <iters> -s <cpuspeed> -m <unit>
  *
  * -i <iter>: Number of SHA256 iterations to perform (optional)
  *            Valid values: 10M, 50M, 100M (default), 200M, 500M
@@ -14,6 +14,9 @@
  * -s <ghz>: x.x GHz speed of CPU when run (optional)
  *           If set, calculates and shows MH/s/0.1GHz for result
  *           Only calculates, cannot set real CPU speed of machine
+ *
+ * - m <unit>: Measure unit to calculate (optional)
+ *             Valid values: MH (default), MB, MiB, cpb
  *
  * Requirement: Intel/AMD x64 CPU, with SHA extensions
  *
@@ -27,6 +30,10 @@
 #include <string.h>
 #include <time.h>
 #include <inttypes.h>
+
+#ifdef _WIN32
+#define strcasecmp _stricmp
+#endif
 
 //-- external functions, recursive SHA256 (rec_sha256_reference.cxx, rec_sha256_fast.cxx)
 void rec_sha256_fast(uint8_t* hash,const uint64_t num_iters);
@@ -52,6 +59,8 @@ uint64_t local_iIterations;
 uint8_t  local_hashEnd[32];
 bool     local_bGHz;
 double   local_dGHz;
+uint64_t local_iUnit;
+char     local_strUnit[16];
 
 //-- main() - entrypoint
 int main(int argc, char* argv[])
@@ -60,11 +69,13 @@ int main(int argc, char* argv[])
  //-- setup/init ANSI capability
  local_ANSISetup();
 
- //-- default parameter values, -i 100M, -s <not set>
+ //-- default parameter values, -i 100M, -s <not set>, -m MH
  local_iIterations = 100000000;
  memcpy(local_hashEnd,local_hashEnd100M,32);
  local_bGHz = false;
  local_dGHz = 0.0;
+ local_iUnit = 0;
+ strcpy(local_strUnit,"MH/s");
 
  //-- parse parameters
  local_ParseParameters(argc,argv);
@@ -72,8 +83,8 @@ int main(int argc, char* argv[])
  //-- display header and benchmark parameters
  setvbuf(stdout,NULL,_IONBF,0);
  printf("\33[1;97m[Benchmark - Fast Recursive SHA256 (w/Intel SHA Extensions)]\33[0m\n");
- if(!local_bGHz){ printf("- Parameters: %" PRIu64 " MH (iterations), n/a GHz (cpu speed)\n",local_iIterations / 1000000); }
- else           { printf("- Parameters: %" PRIu64 " MH (iterations), %.2f GHz (cpu speed)\n",local_iIterations / 1000000,local_dGHz); }
+ if(!local_bGHz){ printf("- Parameters: %" PRIu64 " MH (iterations), n/a GHz (cpu speed), %s (unit)\n",local_iIterations / 1000000,local_strUnit); }
+ else           { printf("- Parameters: %" PRIu64 " MH (iterations), %.2f GHz (cpu speed), %s (unit)\n",local_iIterations / 1000000,local_dGHz,local_strUnit); }
 
  //-- benchmark - fast (rec_sha256_fast.cxx)
  if(local_Benchmark(&rec_sha256_fast,"Fast:")){ return 1; };
@@ -92,11 +103,11 @@ void local_ParseParameters(int argc,char* argv[])
 {
  for(int i = 1, iP = 0; i < argc; ++i){
    if((char)iP == 'i'){
-     if     (!strcmp(argv[i],"10M"))  { local_iIterations = 10000000;  memcpy(local_hashEnd,local_hashEnd10M, 32); }
-     else if(!strcmp(argv[i],"50M"))  { local_iIterations = 50000000;  memcpy(local_hashEnd,local_hashEnd50M, 32); }
-     else if(!strcmp(argv[i],"100M")) { local_iIterations = 100000000; memcpy(local_hashEnd,local_hashEnd100M,32); }
-     else if(!strcmp(argv[i],"200M")) { local_iIterations = 200000000; memcpy(local_hashEnd,local_hashEnd200M,32); }
-     else if(!strcmp(argv[i],"500M")) { local_iIterations = 500000000; memcpy(local_hashEnd,local_hashEnd500M,32); }
+     if     (!strcasecmp(argv[i],"10M"))  { local_iIterations = 10000000;  memcpy(local_hashEnd,local_hashEnd10M, 32); }
+     else if(!strcasecmp(argv[i],"50M"))  { local_iIterations = 50000000;  memcpy(local_hashEnd,local_hashEnd50M, 32); }
+     else if(!strcasecmp(argv[i],"100M")) { local_iIterations = 100000000; memcpy(local_hashEnd,local_hashEnd100M,32); }
+     else if(!strcasecmp(argv[i],"200M")) { local_iIterations = 200000000; memcpy(local_hashEnd,local_hashEnd200M,32); }
+     else if(!strcasecmp(argv[i],"500M")) { local_iIterations = 500000000; memcpy(local_hashEnd,local_hashEnd500M,32); }
      iP = 0; continue;
      }
 
@@ -108,9 +119,18 @@ void local_ParseParameters(int argc,char* argv[])
      iP = 0; continue;
      }
 
+   if((char)iP == 'm'){
+     if     (!strcasecmp(argv[i],"MH"))  { local_iUnit = 0; strcpy(local_strUnit,"MH/s"); }
+     else if(!strcasecmp(argv[i],"MB"))  { local_iUnit = 1; strcpy(local_strUnit,"MB/s"); }
+     else if(!strcasecmp(argv[i],"MiB")) { local_iUnit = 2; strcpy(local_strUnit,"MiB/s"); }
+     else if(!strcasecmp(argv[i],"cpb")) { local_iUnit = 3; strcpy(local_strUnit,"cpb"); }
+     iP = 0; continue;
+     }
+
    iP = 0;
    if(!strcmp(argv[i],"-i")){ iP = 'i'; continue; }
    if(!strcmp(argv[i],"-s")){ iP = 's'; continue; }
+   if(!strcmp(argv[i],"-m")){ iP = 'm'; continue; }
    }
 }
 
@@ -124,6 +144,10 @@ const char* pcName)
  clock_t timeStop;
  clock_t timeElapsed;
  double  dSpeedMHs;
+ double  dSpeedMBs;
+ double  dSpeedMiBs;
+ double  dSpeedCPBhash;
+ double  dSpeedCPBbyte;
  bool    bHashOk;
 
  printf("- %-10s  Consistency check of 0x and 1x iterations ...",pcName);
@@ -147,11 +171,34 @@ const char* pcName)
  timeStop = clock();
  timeElapsed = timeStop - timeStart;
  dSpeedMHs = ((double)local_iIterations / ((double)timeElapsed / CLOCKS_PER_SEC)) / 1000000.0;
+ dSpeedMBs = ((((double)local_iIterations * 64) / 1000000.0) / ((double)timeElapsed / CLOCKS_PER_SEC));
+ dSpeedMiBs = ((((double)local_iIterations * 64) / 1048576.0) / ((double)timeElapsed / CLOCKS_PER_SEC));
+ dSpeedCPBhash = ((double)local_dGHz * 1000000000.0) / (((double)local_iIterations) / ((double)timeElapsed / CLOCKS_PER_SEC));
+ dSpeedCPBbyte = ((double)local_dGHz * 1000000000.0) / (((double)local_iIterations * 64) / ((double)timeElapsed / CLOCKS_PER_SEC));
  bHashOk = (memcmp(hash,local_hashEnd,32)) ? false : true;
 
- if(!local_bGHz){ printf("\33[2K\r- %-10s  \33[1;32m%.2f\33[0m MH/s (\33[1;32mn/a\33[0m MH/s/0.1GHz) [verify hash: %s]\n",pcName,dSpeedMHs,(bHashOk) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
- else           { printf("\33[2K\r- %-10s  \33[1;32m%.2f\33[0m MH/s (\33[1;32m%.3f\33[0m MH/s/0.1GHz) [verify hash: %s]\n",pcName,dSpeedMHs,dSpeedMHs / (local_dGHz * 10.0),(bHashOk) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+ //-- unit: MH/s
+ if(local_iUnit == 0){
+   if(!local_bGHz){ printf("\33[2K\r- %-10s  \33[1;32m%.2f\33[0m MH/s (\33[1;32mn/a\33[0m MH/s/0.1GHz) [verify hash: %s]\n",pcName,dSpeedMHs,(bHashOk) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+   else           { printf("\33[2K\r- %-10s  \33[1;32m%.2f\33[0m MH/s (\33[1;32m%.3f\33[0m MH/s/0.1GHz) [verify hash: %s]\n",pcName,dSpeedMHs,dSpeedMHs / (local_dGHz * 10.0),(bHashOk) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+   }
+ //-- unit: MB/s (MB = megabyte = 1000 x 1000 bytes (8bit) = 1.000.000)
+ else if(local_iUnit == 1){
+   if(!local_bGHz){ printf("\33[2K\r- %-10s  \33[1;32m%.2f\33[0m MB/s (\33[1;32mn/a\33[0m MB/s/0.1GHz) [verify hash: %s]\n",pcName,dSpeedMBs,(bHashOk) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+   else           { printf("\33[2K\r- %-10s  \33[1;32m%.2f\33[0m MB/s (\33[1;32m%.2f\33[0m MB/s/0.1GHz) [verify hash: %s]\n",pcName,dSpeedMBs,dSpeedMBs / (local_dGHz * 10.0),(bHashOk) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+   }
+ //-- unit: MiB/s (MiB = mebibyte = 1024 x 1024 bytes (8bit) = 1.048.576)
+ else if(local_iUnit == 2){
+   if(!local_bGHz){ printf("\33[2K\r- %-10s  \33[1;32m%.2f\33[0m MiB/s (\33[1;32mn/a\33[0m MiB/s/0.1GHz) [verify hash: %s]\n",pcName,dSpeedMiBs,(bHashOk) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+   else           { printf("\33[2K\r- %-10s  \33[1;32m%.2f\33[0m MiB/s (\33[1;32m%.2f\33[0m MiB/s/0.1GHz) [verify hash: %s]\n",pcName,dSpeedMiBs,dSpeedMiBs / (local_dGHz * 10.0),(bHashOk) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+   }
+ //-- unit: cpb (cpb = cycles per block, and per byte)
+ else if(local_iUnit == 3){
+   if(!local_bGHz){ printf("\33[2K\r- %-10s  \33[1;32mn/a\33[0m cycles per block (\33[1;32mn/a\33[0m per byte) [verify hash: %s]\n",pcName,(bHashOk) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+   else           { printf("\33[2K\r- %-10s  \33[1;32m%.1f\33[0m cycles per block (\33[1;32m%.2f\33[0m per byte) [verify hash: %s]\n",pcName,dSpeedCPBhash,dSpeedCPBbyte,(bHashOk) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+   }
 
+ if(local_iUnit == 3 && !local_bGHz){ printf("\33[1;33mINFO:\33[0m Need -s <cpuspeed> parameter to calculate CPU cycles results.\n"); }
  if(!bHashOk){ fprintf(stderr,"\33[1;31mERROR: Resulting hash after %" PRIu64 "MH iterations do not match reference value !\33[0m\n",local_iIterations / 1000000); return 1; }
 
  return 0;
