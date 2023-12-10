@@ -6,7 +6,7 @@ Created as a contribution to optimize the VDF (verifiable delay function) creati
 
 The SHA256 algorithm used recursively can be a method for securing that an amount of sequential computation time has passed (VDF). Once created, easy to verify with checkpoints and parallel SHA256 processing. A valid, but niche way of using SHA256.
 
-Here the recursive SHA256 implementation is presented in its isolated form.
+There is also a [pipelined edition](./pipeline_mt/) for verifying VDF.
 
 ## TLDR;
 
@@ -28,7 +28,7 @@ Recommended:
 
 ## Usage
 
-To use it in your own project. Copy the [rec_sha256_fast.cxx](rec_sha256_fast.cxx) file (only one needed). Remaining files are to illustrate optimizations done and perform benchmark. Function call:
+To use in your own project. Copy the [rec_sha256_fast.cxx](rec_sha256_fast.cxx) file (only one needed). Remaining files are to illustrate optimizations done and perform benchmark. Function call:
 ```c++
 void rec_sha256_fast(     //-- no return value, result to *hash
 uint8_t*       hash,      //-- input/output 32bytes hash/data SHA256 value
