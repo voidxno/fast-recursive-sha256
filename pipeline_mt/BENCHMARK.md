@@ -1,0 +1,93 @@
+# Benchmark (Fast Recursive SHA256) - pipelined
+
+To benchmark, copy all (2x) .cxx files. Compile in your development environment. Run resulting benchmark binary. Compilers tested are Visual Studio 2022, GCC 12 (GNU Compiler Collection) and Clang 15 (LLVM).
+
+Here are samples of benchmark performed on an **Intel 13th-gen** CPU, locked at **6.0 GHz** (**P-cores**) and **4.3 GHz** (**E-cores**). Commands used for compile and run of benchmark shown below (VS2022, Clang15, gcc12):
+
+```batchfile
+cl.exe /O2 /arch:AVX /MP /openmp benchmark_mt.cxx rec_sha256_fast_pl.cxx
+benchmark_mt.exe -i 10M -s 6.0 -m MH -t 1
+benchmark_mt.exe -i 10M -s 4.3 -m MH -t 1
+```
+
+```sh
+clang++ benchmark_mt.cxx rec_sha256_fast_pl.cxx -o benchmark_mt -fopenmp -z noexecstack -mavx -msha -O2
+./benchmark_mt -i 10M -s 6.0 -m MH -t 1
+./benchmark_mt -i 10M -s 4.3 -m MH -t 1
+```
+
+```sh
+g++ benchmark_mt.cxx rec_sha256_fast_pl.cxx -o benchmark_mt -fopenmp -z noexecstack -mavx -msha -O2
+./benchmark_mt -i 10M -s 6.0 -m MH -t 1
+./benchmark_mt -i 10M -s 4.3 -m MH -t 1
+```
+
+Lock CPU speed for benchmark:
+
+To measure capabilities of a CPU core architecture, benchmark needs to run with locked CPU GHz speed. Not max, but locked. Can be possible through BIOS. If not, look for OS utilities. In Linux, maybe [`cpupower`](https://manpages.ubuntu.com/manpages/en/man1/cpupower.1.html) ([`--frequency-set`](https://manpages.ubuntu.com/manpages/man1/cpupower-frequency-set.1.html)).
+
+Lock benchmark to specific CPU core:
+
+If heterogeneous cores on a CPU, like Intel P- and E-cores. Need to lock run of benchmark to specific core. In Linux, look at [`taskset`](https://manpages.ubuntu.com/manpages/en/man1/taskset.1.html) (`--cpu-list`). On Windows, look at `AFFINITY` parameter for `START` batch command.
+
+Be aware of benchmark [limitations](#limitations-mt) when it comes to running multiple threads.
+
+Program call for benchmark:
+```
+benchmark_mt -i <iters> -s <cpuspeed> -m <unit> -t <threads>
+
+-i <iter>: Number of SHA256 iterations to perform (optional)
+           Valid values: 10M (default), 50M, 100M, 200M, 500M
+
+-s <ghz>: x.x GHz speed of CPU when run (optional)
+          If set, calculates and shows MH/s/0.1GHz for result
+          Only calculates, cannot set real CPU speed of machine
+
+-m <unit>: Measure unit to calculate (optional)
+           Valid values: MH (default), MB, MiB, cpb
+
+-t <threads>: Number of threads to run (optional)
+              Valid values: 1 (default), 256 (max)
+```
+Console output for Linux/Clang15 (**P-core**, **6.0 GHz**):
+
+![Console output Linux/Clang15 P-core](/pipeline_mt/media/benchmark_mt_p.png "Console output Linux/Clang15 P-core benchmark")
+
+Console output for Linux/Clang15 (**E-core**, **4.3 GHz**):
+
+![Console output Linux/Clang15 E-core](/pipeline_mt/media/benchmark_mt_e.png "Console output Linux/Clang15 E-core benchmark")
+
+Results (non-pipelined vs pipelined, 1 CPU core, 1 thread):
+
+| | Fast _x1 | Fast _x2 | Uplift |
+| :--- | :--- | :--- | :--- |
+| **P-core**, **6.0 GHz** | 42.42 MH/s | 57.19 MH/s | **+34.8%** |
+| **E-core**, **4.3 GHz** | 42.02 MH/s | 78.40 MH/s | **+86.5%** |
+
+There are nuances. Both synthetic results are great. Real-life P-core, not so much. Look in [RESULTS.md](RESULTS.md).
+
+## Limitations (mt)
+
+Even though this benchmark will measure potential throughput of recursive SHA256 on a CPU core. It is simplistic, and needs to be run in a controlled manner.
+
+Goal here is finding best potential throughput, depending on pipelining and threads. Aiming for that result in real-life implementation.
+
+Factors to control:
+- Pipelined edition
+- Threads
+- Core(s) speed
+- Core(s) used
+
+A few guidelines:
+- Lock CPU speed on cores measured on
+- Lock benchmark to 1 core (usually), or more
+- If more cores, do not mix architecture (P/E-core)
+- Make sure cores are not used by OS or apps (idle)
+- If multiple threads, multiply by cores run on
+- Sample: 4 cores, then 4, 8, 12, 16, 20 threads
+
+Usual method to measure pipelined efficiency:
+- Lock benchmark to 1 core, run 1, 2, 4, 8 thread(s)
+- Look at throughput of `_x1` to `_x4` pipelined editions
+
+<!-- eof -->
