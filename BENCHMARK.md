@@ -41,8 +41,8 @@ benchmark -i <iters> -s <cpuspeed> -m <unit>
           If set, calculates and shows MH/s/0.1GHz for result
           Only calculates, cannot set real CPU speed of machine
 
-- m <unit>: Measure unit to calculate (optional)
-            Valid values: MH (default), MB, MiB, cpb
+-m <unit>: Measure unit to calculate (optional)
+           Valid values: MH (default), MB, MiB, cpb
 ```
 Console output for Windows/VS2022 (**P-core**, **6.0 GHz**):
 
