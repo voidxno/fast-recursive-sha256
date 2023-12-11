@@ -24,7 +24,7 @@ Results (1x **E-core**, Intel 13th-gen, **MH/s/0.1GHz**):
 | `-t 4` | 0.978 | 1.825 | 1.766 | 1.799 |
 | `-t 8` | 0.979 | 1.825 | 1.766 | 1.797 |
 
-Fast _x2 looks like a good choice. Get uplift, with least amount of code complexity.
+Fast _x2 looks like a good choice. Uplift, with least amount of code complexity.
 
 | | Fast _x1 | Fast _x2 | Uplift |
 | :--- | :--- | :--- | :--- |

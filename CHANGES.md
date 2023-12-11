@@ -1,5 +1,8 @@
 # Revisions
 
+**2023.12.11** - Renum Benchmark
+- Recoded [benchmark.cxx](benchmark_mt.cxx) in [benchmark_mt.cxx](./pipeline_mt/benchmark_mt.cxx) style.
+
 **2023.12.10** - Pipelined
 - Added new [pipelined/multithreaded](./pipeline_mt/) section.
 - New _x2, _x3, _x4 (pipelined) vs _x1 (non-pipelined).

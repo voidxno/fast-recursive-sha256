@@ -225,13 +225,13 @@ uint32_t    bpipes)
    }
  //-- unit: MiB/s (MiB = mebibyte = 1024 x 1024 bytes (8bit) = 1.048.576)
  else if(local_unit == 2){
-   if(!local_ghz){ printf("\33[2K\r- %-9s  \33[1;32m%9.2f\33[0m MiB/s (\33[1;32mn/a\33[0m MiB/s/0.1GHz) [verify hash: %s]\n",bname,speedMiBs,(hashok) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
-   else          { printf("\33[2K\r- %-9s  \33[1;32m%9.2f\33[0m MiB/s (\33[1;32m%7.2f\33[0m MiB/s/0.1GHz) [verify hash: %s]\n",bname,speedMiBs,speedMiBs / (local_ghzval * 10.0),(hashok) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+   if(!local_ghz){ printf("\33[2K\r- %-9s \33[1;32m%9.2f\33[0m MiB/s (\33[1;32mn/a\33[0m MiB/s/0.1GHz) [verify hash: %s]\n",bname,speedMiBs,(hashok) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+   else          { printf("\33[2K\r- %-9s \33[1;32m%9.2f\33[0m MiB/s (\33[1;32m%7.2f\33[0m MiB/s/0.1GHz) [verify hash: %s]\n",bname,speedMiBs,speedMiBs / (local_ghzval * 10.0),(hashok) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
    }
  //-- unit: cpb (cpb = cycles per block, and per byte)
  else if(local_unit == 3){
-   if(!local_ghz){ printf("\33[2K\r- %-9s  \33[1;32mn/a\33[0m cycles per block (\33[1;32mn/a\33[0m per byte) [verify hash: %s]\n",bname,(hashok) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
-   else          { printf("\33[2K\r- %-9s  \33[1;32m%5.1f\33[0m cycles per block (\33[1;32m%4.2f\33[0m per byte) [verify hash: %s]\n",bname,speedCPBhash,speedCPBbyte,(hashok) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+   if(!local_ghz){ printf("\33[2K\r- %-9s \33[1;32mn/a\33[0m cycles per block (\33[1;32mn/a\33[0m per byte) [verify hash: %s]\n",bname,(hashok) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
+   else          { printf("\33[2K\r- %-9s \33[1;32m%6.1f\33[0m cycles per block (\33[1;32m%4.2f\33[0m per byte) [verify hash: %s]\n",bname,speedCPBhash,speedCPBbyte,(hashok) ? "\33[1;32mok\33[0m" : "\33[1;31mERROR\33[0m"); }
    }
 
  if(local_unit == 3 && !local_ghz){ printf("- \33[1;33mINFO: Need -s <cpuspeed> parameter to calculate CPU cycles results.\33[0m\n"); }
