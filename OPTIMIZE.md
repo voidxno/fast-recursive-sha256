@@ -90,7 +90,7 @@ Started by having fun running a TimeLord on [MMX blockchain](https://github.com/
 
 Have some programming background. Manage to navigate most areas, but not my daily work. Good at looking at stuff logically, identify patterns, problemsolve.
 
-Real timeline was working step-by-step (there were many) to a final assembler (ASM) source code edition. Got to a point where the result was 0.702 MH/s/0.1GHz (Intel 13th-Gen CPU).
+Real timeline was working step-by-step (there were many) to a final assembler (ASM) source code edition. Got to a point where the result was 0.702 MH/s/0.1GHz (Intel 13th-Gen CPU, P-core, Raptor Cove).
 
 Shifted at some point to try contributing by optimizing public C++ source code for SHA256 creation in TimeLord. Already a good SHA256 implementation written by [Max](https://github.com/madMAx43v3r) in C++ intrinsics, using SHA Extensions. Had my private 0.702 (ASM) reference point, knowing it was technically possible.
 

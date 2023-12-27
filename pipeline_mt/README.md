@@ -48,14 +48,22 @@ const uint64_t num_iters) //-- number of times to SHA256 4x 32bytes given in *ha
 ```
 ## Benchmark (mt)
 
-Intel 13th-gen CPU **P-core** at **6.0 GHz** (Linux/Clang15): **57.19 MH/s** (1 thread, `_x2`)
+Intel 13th-gen CPU **P-core** (Raptor Cove) at **6.0 GHz** (Linux/Clang15): **57.19 MH/s** (1 thread, `_x2`):
 
 ![Console output Linux/Clang15 P-core](/pipeline_mt/media/benchmark_mt_p.png "Console output Linux/Clang15 P-core benchmark")
 
-Intel 13th-gen CPU **E-core** at **4.3 GHz** (Linux/Clang15): **78.40 MH/s** (1 thread, `_x2`)
+Intel 13th-gen CPU **E-core** (Gracemont) at **4.3 GHz** (Linux/Clang15): **78.40 MH/s** (1 thread, `_x2`):
 
 ![Console output Linux/Clang15 E-core](/pipeline_mt/media/benchmark_mt_e.png "Console output Linux/Clang15 E-core benchmark")
 
+AMD 7040-series CPU **Zen4-core** (Phoenix) at **5.1 GHz** (Linux/Clang15): **72.83 MH/s** (1 thread, `_x2`):
+
+![Console output Linux/Clang15 Zen4-core](/pipeline_mt/media/benchmark_mt_z4.png "Console output Linux/Clang15 Zen4-core benchmark")
+
 Look [BENCHMARK.md](BENCHMARK.md) for more information, pipelining, threads and results.
+
+## Optimization (mt)
+
+Look [OPTIMIZE.md](OPTIMIZE.md) for more information.
 
 <!-- eof -->
