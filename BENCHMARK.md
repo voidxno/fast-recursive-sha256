@@ -2,24 +2,27 @@
 
 To benchmark, copy all (3x) .cxx files. Compile in your development environment. Run resulting benchmark binary. Compilers tested are Visual Studio 2022, GCC 12 (GNU Compiler Collection) and Clang 15 (LLVM).
 
-Here are samples of benchmark performed on an **Intel 13th-gen** CPU, locked at **6.0 GHz** (**P-cores**) and **4.3 GHz** (**E-cores**). Commands used for compile and run of benchmark shown below (VS2022, Clang15, gcc12):
+Here are samples of benchmark performed on 3 types of CPU cores. **Intel 13th-gen** (Raptor Lake), locked at **6.0 GHz** (**P-core**, Raptor Cove) and **4.3 GHz** (**E-core**, Gracemont). **AMD 7040-series** (Phoenix), locked at **5.1 GHz** (**Zen4-core**, Phoenix). Commands used for compile and run of benchmark shown below (VS2022, Clang15, gcc12):
 
 ```batchfile
 cl.exe /O2 /arch:AVX benchmark.cxx rec_sha256_fast.cxx rec_sha256_reference.cxx
 benchmark.exe -i 100M -s 6.0 -m MH
 benchmark.exe -i 100M -s 4.3 -m MH
+benchmark.exe -i 100M -s 5.1 -m MH
 ```
 
 ```sh
 clang++ benchmark.cxx rec_sha256_fast.cxx rec_sha256_reference.cxx -o benchmark -z noexecstack -mavx -msha -O2
 ./benchmark -i 100M -s 6.0 -m MH
 ./benchmark -i 100M -s 4.3 -m MH
+./benchmark -i 100M -s 5.1 -m MH
 ```
 
 ```sh
 g++ benchmark.cxx rec_sha256_fast.cxx rec_sha256_reference.cxx -o benchmark -z noexecstack -mavx -msha -O2
 ./benchmark -i 100M -s 6.0 -m MH
 ./benchmark -i 100M -s 4.3 -m MH
+./benchmark -i 100M -s 5.1 -m MH
 ```
 
 Lock CPU speed for benchmark:
@@ -64,6 +67,14 @@ Results (**E-core**, **4.3 GHz**):
 | Linux/Clang15 | 42.09 MH/s | **0.979** | 40.91 MH/s | **0.951** |
 | Linux/gcc12 | 42.07 MH/s | **0.978** | 33.43 MH/s | **0.777** |
 
+Results (**Zen4-core**, **5.1 GHz**):
+
+| Environment <sup>[1]</sup> | Fast | P/U <sup>[2]</sup> | Reference <sup>[3]</sup> | P/U <sup>[2]</sup> |
+| :--- | :--- | :--- | :--- | :--- |
+| Windows/VS2022 | 38.31 MH/s | **0.751** | 18.73 MH/s | **0.367** |
+| Linux/Clang15 | 38.52 MH/s | **0.755** | 37.39 MH/s | **0.733** |
+| Linux/gcc12 | 38.32 MH/s | **0.751** | 30.40 MH/s | **0.596** |
+
 _<sup>[1]</sup> Compiler versions, VS2022 v19.36.32532, Clang15 v15.0.7, gcc12 v12.2.0._\
 _<sup>[2]</sup> P/U, per unit, MH/s/0.1GHz speed from measured MH/s and CPU speed._\
 _<sup>[3]</sup> Reference numbers are only to illustrate source code optimization effect._
@@ -72,6 +83,6 @@ All testing indicates a linear MH/s increase, given CPU GHz speed. Locking CPU s
 
 Elements surrounding raw GHz of CPU do not look to affect results (RAM, HyperThreading, CPU cache, more). Seems logical, since the recursive SHA256 implementation is not much more than a few instructions repeated in a CPU core.
 
-Intel's E-cores are much more efficient per 0.1 GHz than P-cores. Cannot run with as high clock. Still manages to get work done. In the end, a race of who can clock highest (GHz).
+Intel's E-core is much more efficient per 0.1 GHz than P-core. Cannot run with as high clock. Still manages to get work done. AMD's Zen4-core is a combination in-between. In the end, a race of who can clock highest (GHz).
 
 <!-- eof -->

@@ -2,24 +2,27 @@
 
 To benchmark, copy all (2x) .cxx files. Compile in your development environment. Run resulting benchmark binary. Compilers tested are Visual Studio 2022, GCC 12 (GNU Compiler Collection) and Clang 15 (LLVM).
 
-Here are samples of benchmark performed on an **Intel 13th-gen** CPU, locked at **6.0 GHz** (**P-cores**) and **4.3 GHz** (**E-cores**). Commands used for compile and run of benchmark shown below (VS2022, Clang15, gcc12):
+Here are samples of benchmark performed on 3 types of CPU cores. **Intel 13th-gen** (Raptor Lake), locked at **6.0 GHz** (**P-cores**, Raptor Cove) and **4.3 GHz** (**E-cores**, Gracemont). **AMD 7040-series** (Phoenix), locked at **5.1 GHz** (**Zen4-cores**, Phoenix). Commands used for compile and run of benchmark shown below (VS2022, Clang15, gcc12):
 
 ```batchfile
 cl.exe /O2 /arch:AVX /MP /openmp benchmark_mt.cxx rec_sha256_fast_pl.cxx
 benchmark_mt.exe -i 10M -s 6.0 -m MH -t 1
 benchmark_mt.exe -i 10M -s 4.3 -m MH -t 1
+benchmark_mt.exe -i 10M -s 5.1 -m MH -t 1
 ```
 
 ```sh
 clang++ benchmark_mt.cxx rec_sha256_fast_pl.cxx -o benchmark_mt -fopenmp -z noexecstack -mavx -msha -O2
 ./benchmark_mt -i 10M -s 6.0 -m MH -t 1
 ./benchmark_mt -i 10M -s 4.3 -m MH -t 1
+./benchmark_mt -i 10M -s 5.1 -m MH -t 1
 ```
 
 ```sh
 g++ benchmark_mt.cxx rec_sha256_fast_pl.cxx -o benchmark_mt -fopenmp -z noexecstack -mavx -msha -O2
 ./benchmark_mt -i 10M -s 6.0 -m MH -t 1
 ./benchmark_mt -i 10M -s 4.3 -m MH -t 1
+./benchmark_mt -i 10M -s 5.1 -m MH -t 1
 ```
 
 Lock CPU speed for benchmark:
@@ -57,14 +60,19 @@ Console output for Linux/Clang15 (**E-core**, **4.3 GHz**):
 
 ![Console output Linux/Clang15 E-core](/pipeline_mt/media/benchmark_mt_e.png "Console output Linux/Clang15 E-core benchmark")
 
+Console output for Linux/Clang15 (**Zen4-core**, **5.1 GHz**):
+
+![Console output Linux/Clang15 Zen4-core](/pipeline_mt/media/benchmark_mt_z4.png "Console output Linux/Clang15 Zen4-core benchmark")
+
 Results (non-pipelined vs pipelined, 1 CPU core, 1 thread):
 
 | | Fast _x1 | Fast _x2 | Uplift |
 | :--- | :--- | :--- | :--- |
 | **P-core**, **6.0 GHz** | 42.42 MH/s | 57.19 MH/s | **+34.8%** |
 | **E-core**, **4.3 GHz** | 42.02 MH/s | 78.40 MH/s | **+86.5%** |
+| **Zen4-core**, **5.1 GHz** | 38.36 MH/s | 72.83 MH/s | **+89.8%** |
 
-There are nuances. Both synthetic results are great. Real-life P-core, not so much. Look in [RESULTS.md](RESULTS.md).
+There are nuances. Synthetic results are great. Real-life P-core, not so much. Zen4-core, some reduction. Look in [RESULTS.md](RESULTS.md).
 
 ## Limitations (mt)
 

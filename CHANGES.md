@@ -1,5 +1,8 @@
 # Revisions
 
+**2023.12.27** - Added Zen4
+- Added results for AMD 7040-series, Zen4-core (Phoenix).
+
 **2023.12.11** - Renum Benchmark
 - Recoded [benchmark.cxx](benchmark_mt.cxx) in [benchmark_mt.cxx](./pipeline_mt/benchmark_mt.cxx) style.
 
