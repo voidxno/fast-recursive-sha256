@@ -1,6 +1,6 @@
 # Optimization (Fast Recursive SHA256)
 
-Walkthrough of optimizations realized in source code of [rec_sha256_fast.cxx](rec_sha256_fast.cxx).
+Walkthrough of optimizations realized in source code of [rsha256_fast_x64.cxx](rsha256_fast_x64.cxx) (Intel).
 
 First looked at different implementations of SHA-256 (SHA256). [Pseudocode](https://en.wikipedia.org/wiki/SHA-2#Pseudocode),
 Intel [SHA Extensions](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sha-extensions.html),
@@ -9,6 +9,8 @@ Intel [SHA Extensions](https://www.intel.com/content/www/us/en/developer/article
 Below are steps from generic implementation to final result.
 
 In reality there was an assembler (ASM) source code edition before C++ intrinsics. Look [background](#background) section.
+
+Methodology is nearly identical for [rsha256_fast_arm.cxx](rsha256_fast_arm.cxx) (ARM). Except a few nuances because of differences between accelerated instructions.
 
 ## Step 1 - Generic SHA256
 
@@ -19,7 +21,7 @@ void sha256(uint8_t* out, const uint8_t* in, const uint64_t length){ ... }
 
 Add recursive usage:
 ```c++
-void rec_sha256(uint8_t* hash, const uint64_t num_iters)
+void rsha256(uint8_t* hash, const uint64_t num_iters)
 {
  for(uint64_t i = 0; i < num_iters; ++i)
    sha256(hash,hash,32);
@@ -33,9 +35,9 @@ Two very obvious elements stand out when you look at step 1:
 - Always looping
 - Always calling `sha256()` with static length of 32 bytes
 
-Move all `sha256()` source code into `rec_sha256()` function. Walkthrough and rewrite with static prerequisite of 32 bytes length. Several elements are eliminated, some simplified.
+Move all `sha256()` source code into `rsha256()` function. Walkthrough and rewrite with static prerequisite of 32 bytes length. Several elements are eliminated, some simplified.
 
-Resulting source code is what the [rec_sha256_reference.cxx](rec_sha256_reference.cxx) file represents.
+Resulting source code is what the [rsha256_ref_x64.cxx](rsha256_ref_x64.cxx) file represents.
 
 A file where generic SHA256 elements still come in usual order, but simplified by 32 bytes prerequisite. Helps most compilers to optimize with good, but varying results.
 
@@ -51,13 +53,13 @@ Last step is seeing loop for what it is:
 
 Elements adjusted:
 - Realize static nature of 3rd/4th 16 bytes of 1x block (64 bytes)
-- Convert/move/pre-rotate into 2x static __m128i (HPAD0_CACHE, HPAD1_CACHE)
-- Move/pre-rotate round init values into 2x static __mm128i (ABEF_INIT, CDGH_INIT)
+- Convert/move/pre-shuffle into 2x static __m128i (HPAD0_CACHE, HPAD1_CACHE)
+- Move/pre-shuffle round init values into 2x static __mm128i (ABEF_INIT, CDGH_INIT)
 - Eliminate SHUF_MASK usage inside loop, only outside
 - Contain hash value through loops in 2x __mm128i (HASH0_SAVE, HASH1_SAVE)
 - Perform init/finish input/output hash values outside loop
 
-Result was the [rec_sha256_fast.cxx](rec_sha256_fast.cxx) file.
+Result was the [rsha256_fast_x64.cxx](rsha256_fast_x64.cxx) file.
 
 At this point. Very clean C++ intrinsics implementation. Looks to translate by most compilers to similarly fast binary code.
 
