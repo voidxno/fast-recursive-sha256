@@ -4,7 +4,8 @@
  * Author: voidxno
  * Created: 10 Dec 2023
  *
- * Benchmark of fast recursive SHA256, with intrinsics and Intel SHA Extensions
+ * Benchmark of fast recursive SHA256, with intrinsics
+ * and Intel SHA Extensions or ARM Cryptography Extensions
  * Multithread benchmark, using pipelined editions, from x1 to x4
  *
  * Program call: benchmark_mt -i <iters> -s <cpuspeed> -m <unit> -t <threads>
@@ -22,18 +23,19 @@
  * -t <threads>: Number of threads to run (optional)
  *               Valid values: 1 (default), 256 (max)
  *
- * Requirement: Intel/AMD x64 CPU, with SHA extensions
+ * Requirement: Intel/AMD x64 CPU, with SHA Extensions, or
+ *              ARM CPU, with Cryptography Extensions
  *
  * LICENSE: Unlicense
  * For more information, please refer to <https://unlicense.org>
  *
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <inttypes.h>
 
 #include <omp.h>
 
@@ -41,11 +43,11 @@
 #define strcasecmp _stricmp
 #endif
 
-//-- external functions, pipelined recursive SHA256 (rec_sha256_fast_pl.cxx)
-void rec_sha256_fast_x1(uint8_t* hash, const uint64_t num_iters);
-void rec_sha256_fast_x2(uint8_t* hash, const uint64_t num_iters);
-void rec_sha256_fast_x3(uint8_t* hash, const uint64_t num_iters);
-void rec_sha256_fast_x4(uint8_t* hash, const uint64_t num_iters);
+//-- external functions, pipelined recursive SHA256 (rsha256pl_fast_*.cxx)
+void rsha256_fast_x1(uint8_t* hash, const uint64_t num_iters);
+void rsha256_fast_x2(uint8_t* hash, const uint64_t num_iters);
+void rsha256_fast_x3(uint8_t* hash, const uint64_t num_iters);
+void rsha256_fast_x4(uint8_t* hash, const uint64_t num_iters);
 
 //-- local functions
 void local_ANSISetup(void);
@@ -87,7 +89,13 @@ int main(int argc, char* argv[])
 
  //-- display header
  setvbuf(stdout,NULL,_IONBF,0);
+#if defined(__amd64__) || defined(_M_AMD64)
  printf("\33[1;97m[Benchmark (mt) - Fast Recursive SHA256 (w/Intel SHA Extensions)]\33[0m\n");
+#elif defined(__aarch64__) || defined(_M_ARM64)
+ printf("\33[1;97m[Benchmark (mt) - Fast Recursive SHA256 (w/ARM Cryptography Extensions)]\33[0m\n");
+#else
+ printf("\33[1;97m[Benchmark (mt) - Fast Recursive SHA256 (w/<unknown platform>)]\33[0m\n");
+#endif
 
  //-- parse parameters
  local_ParseParameters(argc,argv);
@@ -96,11 +104,11 @@ int main(int argc, char* argv[])
  if(!local_ghz){ printf("- Parameters: %" PRIu64 " MH (iterations), n/a GHz (cpu speed), %s (unit), %d (threads)\n",local_iters / 1000000,local_unitstr,local_threads); }
  else          { printf("- Parameters: %" PRIu64 " MH (iterations), %.2f GHz (cpu speed), %s (unit), %d (threads)\n",local_iters / 1000000,local_ghzval,local_unitstr,local_threads); }
 
- //-- benchmark - pipeline x1, x2, x3, x4 (rec_sha256_fast_pl.cxx)
- if(local_Benchmark(&rec_sha256_fast_x1,"Fast _x1:",1)){ return 1; };
- if(local_Benchmark(&rec_sha256_fast_x2,"Fast _x2:",2)){ return 1; };
- if(local_Benchmark(&rec_sha256_fast_x3,"Fast _x3:",3)){ return 1; };
- if(local_Benchmark(&rec_sha256_fast_x4,"Fast _x4:",4)){ return 1; };
+ //-- benchmark - pipeline x1, x2, x3, x4 (rsha256pl_fast_*.cxx)
+ if(local_Benchmark(&rsha256_fast_x1,"Fast _x1:",1)){ return 1; };
+ if(local_Benchmark(&rsha256_fast_x2,"Fast _x2:",2)){ return 1; };
+ if(local_Benchmark(&rsha256_fast_x3,"Fast _x3:",3)){ return 1; };
+ if(local_Benchmark(&rsha256_fast_x4,"Fast _x4:",4)){ return 1; };
 
  //-- restore ANSI capability
  local_ANSIRestore();

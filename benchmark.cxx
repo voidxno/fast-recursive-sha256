@@ -4,7 +4,8 @@
  * Author: voidxno
  * Created: 12 Jun 2023
  *
- * Benchmark of fast recursive SHA256, with intrinsics and Intel SHA Extensions
+ * Benchmark of fast recursive SHA256, with intrinsics and
+ * Intel SHA Extensions or ARM Cryptography Extensions
  *
  * Program call: benchmark -i <iters> -s <cpuspeed> -m <unit>
  *
@@ -18,26 +19,27 @@
  * -m <unit>: Measure unit to calculate (optional)
  *            Valid values: MH (default), MB, MiB, cpb
  *
- * Requirement: Intel/AMD x64 CPU, with SHA extensions
+ * Requirement: Intel/AMD x64 CPU, with SHA Extensions, or
+ *              ARM CPU, with Cryptography Extensions
  *
  * LICENSE: Unlicense
  * For more information, please refer to <https://unlicense.org>
  *
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <inttypes.h>
 
 #ifdef _WIN32
 #define strcasecmp _stricmp
 #endif
 
-//-- external functions, recursive SHA256 (rec_sha256_reference.cxx, rec_sha256_fast.cxx)
-void rec_sha256_fast(uint8_t* hash,const uint64_t num_iters);
-void rec_sha256_reference(uint8_t* hash,const uint64_t num_iters);
+//-- external functions, recursive SHA256 (rsha256_fast_*.cxx, rsha256_ref_*.cxx)
+void rsha256_fast(uint8_t* hash,const uint64_t num_iters);
+void rsha256_ref(uint8_t* hash,const uint64_t num_iters);
 
 //-- local functions
 void local_ANSISetup(void);
@@ -77,7 +79,13 @@ int main(int argc, char* argv[])
 
  //-- display header
  setvbuf(stdout,NULL,_IONBF,0);
+#if defined(__amd64__) || defined(_M_AMD64)
  printf("\33[1;97m[Benchmark - Fast Recursive SHA256 (w/Intel SHA Extensions)]\33[0m\n");
+#elif defined(__aarch64__) || defined(_M_ARM64)
+ printf("\33[1;97m[Benchmark - Fast Recursive SHA256 (w/ARM Cryptography Extensions)]\33[0m\n");
+#else
+ printf("\33[1;97m[Benchmark - Fast Recursive SHA256 (w/<unknown platform>)]\33[0m\n");
+#endif
 
  //-- parse parameters
  local_ParseParameters(argc,argv);
@@ -86,11 +94,11 @@ int main(int argc, char* argv[])
  if(!local_ghz){ printf("- Parameters: %" PRIu64 " MH (iterations), n/a GHz (cpu speed), %s (unit)\n",local_iters / 1000000,local_unitstr); }
  else          { printf("- Parameters: %" PRIu64 " MH (iterations), %.2f GHz (cpu speed), %s (unit)\n",local_iters / 1000000,local_ghzval,local_unitstr); }
 
- //-- benchmark - fast (rec_sha256_fast.cxx)
- if(local_Benchmark(&rec_sha256_fast,"Fast:")){ return 1; };
+ //-- benchmark - fast (rsha256_fast_*.cxx)
+ if(local_Benchmark(&rsha256_fast,"Fast:")){ return 1; };
 
- //-- benchmark - reference (rec_sha256_reference.cxx)
- if(local_Benchmark(&rec_sha256_reference,"Reference:")){ return 1; };
+ //-- benchmark - reference (rsha256_ref_*.cxx)
+ if(local_Benchmark(&rsha256_ref,"Reference:")){ return 1; };
 
  //-- restore ANSI capability
  local_ANSIRestore();
