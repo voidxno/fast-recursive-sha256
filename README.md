@@ -2,11 +2,11 @@
 
 A fast recursive [SHA-256](https://en.wikipedia.org/wiki/SHA-2#Pseudocode) (SHA256) implementation in C++ intrinsics with [Intel SHA Extensions](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sha-extensions.html) or [ARM Cryptography Extensions](https://developer.arm.com/architectures/instruction-sets/intrinsics/#q=sha256), and extra source code [optimizations](OPTIMIZE.md).
 
-Created as a contribution to optimize the VDF (verifiable delay function) creation part by TimeLord in [MMX blockchain](https://github.com/madMAx43v3r/mmx-node).
+Written as a contribution to optimize create VDF (verifiable delay function) TimeLord logic in [MMX blockchain](https://github.com/madMAx43v3r/mmx-node).
 
 The SHA256 algorithm used recursively can be a method for securing that an amount of sequential computation time has passed (VDF). Once created, easy to verify with checkpoints and parallel SHA256 processing. A valid, but niche way of using SHA256.
 
-There is also a [pipelined edition](./pipeline_mt/) for verifying VDF.
+There is also a [pipelined edition](./pipeline_mt/) for verify VDF logic.
 
 ## TLDR;
 
@@ -32,7 +32,7 @@ Recommended:
 
 ## Usage
 
-To use in your own project. Copy [rsha256_fast_x64.cxx](rsha256_fast_x64.cxx) or [rsha256_fast_arm.cxx](rsha256_fast_arm.cxx) file (only one needed). Remaining files are to illustrate optimizations done and perform benchmark. Function call:
+To use in your own project. Copy [rsha256_fast_x64.cxx](rsha256_fast_x64.cxx) or [rsha256_fast_arm.cxx](rsha256_fast_arm.cxx) file (only one needed). Remaining files are to illustrate optimizations and perform benchmark. Function call:
 ```c++
 void rsha256_fast(        //-- no return value, result to *hash
 uint8_t*       hash,      //-- input/output 32bytes hash/data SHA256 value
@@ -41,15 +41,19 @@ const uint64_t num_iters) //-- number of times to SHA256 32bytes given in *hash
 
 ## Benchmark
 
-Intel 13th-gen CPU P-core at **6.0 GHz** (Windows/VS2022): **42.48 MH/s**
+Intel 15th-gen CPU E-core at **4.6 GHz** (Linux/gcc15): **62.19 MH/s**
 
-![Console output Windows/VS2022](/media/benchmark.png "Console output Windows/VS2022 benchmark")
+<pre><code><b>[Benchmark - Fast Recursive SHA256 (w/Intel SHA Extensions)]</b>
+- Parameters: 100 MH (iterations), 4.60 GHz (cpu speed), MH/s (unit)
+- Fast:       <b>62.19</b> MH/s (<b>1.352</b> MH/s/0.1GHz) [verify hash: <b>ok</b>]
+- Reference:  <b>43.17</b> MH/s (<b>0.939</b> MH/s/0.1GHz) [verify hash: <b>ok</b>]
+</code></pre>
 
 Look [BENCHMARK.md](BENCHMARK.md) for more information, and results.
 
 ## Optimization
 
-Look [OPTIMIZE.md](OPTIMIZE.md) for more information, and [CHANGES.md](CHANGES.md) for revisions.
+Look [OPTIMIZE.md](OPTIMIZE.md) for more information, and [CHANGES.md](CHANGES.md) for history.
 
 ## Donation
 

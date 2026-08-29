@@ -63,6 +63,10 @@ const uint64_t num_iters) //-- number of times to SHA256 1x 32bytes given in *ha
  const __m128i HPAD0_CACHE = _mm_set_epi64x(0x0000000000000000,0x0000000080000000);
  const __m128i HPAD1_CACHE = _mm_set_epi64x(0x0000010000000000,0x0000000000000000);
 
+ //-- pre-calc/static values
+ const __m128i MORE0_CACHE = _mm_set_epi64x(0x5807AA985807AA98,0x550C7DC3243185BE);
+ const __m128i MORE1_CACHE = _mm_set_epi64x(0x0000000000000000,0x0000000000000000);
+
  //-- variables to calculate SHA256 rounds
  __m128i STATE0_P1; __m128i STATE1_P1; __m128i MSGV_P1; __m128i MSGTMP0_P1; __m128i MSGTMP1_P1; __m128i MSGTMP2_P1; __m128i MSGTMP3_P1;
 
@@ -104,7 +108,7 @@ const uint64_t num_iters) //-- number of times to SHA256 1x 32bytes given in *ha
    MSGV_P1 = _mm_add_epi32(MSGV_P1,_mm_load_si128((__m128i*)(&K64[8])));
    STATE1_P1 = _mm_sha256rnds2_epu32(STATE1_P1,STATE0_P1,MSGV_P1);
    MSGV_P1 = _mm_shuffle_epi32(MSGV_P1,0x0E);
-   STATE0_P1 = _mm_sha256rnds2_epu32(STATE0_P1,STATE1_P1,MSGV_P1);
+   STATE0_P1 = _mm_sha256rnds2_epu32(STATE0_P1,STATE1_P1,MORE0_CACHE);
    MSGTMP1_P1 = _mm_sha256msg1_epu32(MSGTMP1_P1,MSGTMP2_P1);
 
    //-- rounds 12-15
@@ -112,7 +116,7 @@ const uint64_t num_iters) //-- number of times to SHA256 1x 32bytes given in *ha
    MSGTMP3_P1 = MSGV_P1;
    MSGV_P1 = _mm_add_epi32(MSGV_P1,_mm_load_si128((__m128i*)(&K64[12])));
    STATE1_P1 = _mm_sha256rnds2_epu32(STATE1_P1,STATE0_P1,MSGV_P1);
-   MSGTMP0_P1 = _mm_add_epi32(MSGTMP0_P1,_mm_alignr_epi8(MSGTMP3_P1,MSGTMP2_P1,4));
+   MSGTMP0_P1 = _mm_add_epi32(MSGTMP0_P1,MORE1_CACHE);
    MSGTMP0_P1 = _mm_sha256msg2_epu32(MSGTMP0_P1,MSGTMP3_P1);
    MSGV_P1 = _mm_shuffle_epi32(MSGV_P1,0x0E);
    STATE0_P1 = _mm_sha256rnds2_epu32(STATE0_P1,STATE1_P1,MSGV_P1);
@@ -220,6 +224,10 @@ const uint64_t num_iters) //-- number of times to SHA256 2x 32bytes given in *ha
  const __m128i HPAD0_CACHE = _mm_set_epi64x(0x0000000000000000,0x0000000080000000);
  const __m128i HPAD1_CACHE = _mm_set_epi64x(0x0000010000000000,0x0000000000000000);
 
+ //-- pre-calc/static values
+ const __m128i MORE0_CACHE = _mm_set_epi64x(0x5807AA985807AA98,0x550C7DC3243185BE);
+ const __m128i MORE1_CACHE = _mm_set_epi64x(0x0000000000000000,0x0000000000000000);
+
  //-- variables to calculate SHA256 rounds
  __m128i STATE0_P1; __m128i STATE1_P1; __m128i MSGV_P1; __m128i MSGTMP0_P1; __m128i MSGTMP1_P1; __m128i MSGTMP2_P1; __m128i MSGTMP3_P1;
  __m128i STATE0_P2; __m128i STATE1_P2; __m128i MSGV_P2; __m128i MSGTMP0_P2; __m128i MSGTMP1_P2; __m128i MSGTMP2_P2; __m128i MSGTMP3_P2;
@@ -286,8 +294,8 @@ const uint64_t num_iters) //-- number of times to SHA256 2x 32bytes given in *ha
    STATE1_P2 = _mm_sha256rnds2_epu32(STATE1_P2,STATE0_P2,MSGV_P2);
    MSGV_P1 = _mm_shuffle_epi32(MSGV_P1,0x0E);
    MSGV_P2 = _mm_shuffle_epi32(MSGV_P2,0x0E);
-   STATE0_P1 = _mm_sha256rnds2_epu32(STATE0_P1,STATE1_P1,MSGV_P1);
-   STATE0_P2 = _mm_sha256rnds2_epu32(STATE0_P2,STATE1_P2,MSGV_P2);
+   STATE0_P1 = _mm_sha256rnds2_epu32(STATE0_P1,STATE1_P1,MORE0_CACHE);
+   STATE0_P2 = _mm_sha256rnds2_epu32(STATE0_P2,STATE1_P2,MORE0_CACHE);
    MSGTMP1_P1 = _mm_sha256msg1_epu32(MSGTMP1_P1,MSGTMP2_P1);
    MSGTMP1_P2 = _mm_sha256msg1_epu32(MSGTMP1_P2,MSGTMP2_P2);
 
@@ -300,8 +308,8 @@ const uint64_t num_iters) //-- number of times to SHA256 2x 32bytes given in *ha
    MSGV_P2 = _mm_add_epi32(MSGV_P2,_mm_load_si128((__m128i*)(&K64[12])));
    STATE1_P1 = _mm_sha256rnds2_epu32(STATE1_P1,STATE0_P1,MSGV_P1);
    STATE1_P2 = _mm_sha256rnds2_epu32(STATE1_P2,STATE0_P2,MSGV_P2);
-   MSGTMP0_P1 = _mm_add_epi32(MSGTMP0_P1,_mm_alignr_epi8(MSGTMP3_P1,MSGTMP2_P1,4));
-   MSGTMP0_P2 = _mm_add_epi32(MSGTMP0_P2,_mm_alignr_epi8(MSGTMP3_P2,MSGTMP2_P2,4));
+   MSGTMP0_P1 = _mm_add_epi32(MSGTMP0_P1,MORE1_CACHE);
+   MSGTMP0_P2 = _mm_add_epi32(MSGTMP0_P2,MORE1_CACHE);
    MSGTMP0_P1 = _mm_sha256msg2_epu32(MSGTMP0_P1,MSGTMP3_P1);
    MSGTMP0_P2 = _mm_sha256msg2_epu32(MSGTMP0_P2,MSGTMP3_P2);
    MSGV_P1 = _mm_shuffle_epi32(MSGV_P1,0x0E);
@@ -460,6 +468,10 @@ const uint64_t num_iters) //-- number of times to SHA256 3x 32bytes given in *ha
  const __m128i HPAD0_CACHE = _mm_set_epi64x(0x0000000000000000,0x0000000080000000);
  const __m128i HPAD1_CACHE = _mm_set_epi64x(0x0000010000000000,0x0000000000000000);
 
+ //-- pre-calc/static values
+ const __m128i MORE0_CACHE = _mm_set_epi64x(0x5807AA985807AA98,0x550C7DC3243185BE);
+ const __m128i MORE1_CACHE = _mm_set_epi64x(0x0000000000000000,0x0000000000000000);
+
  //-- variables to calculate SHA256 rounds
  __m128i STATE0_P1; __m128i STATE1_P1; __m128i MSGV_P1; __m128i MSGTMP0_P1; __m128i MSGTMP1_P1; __m128i MSGTMP2_P1; __m128i MSGTMP3_P1;
  __m128i STATE0_P2; __m128i STATE1_P2; __m128i MSGV_P2; __m128i MSGTMP0_P2; __m128i MSGTMP1_P2; __m128i MSGTMP2_P2; __m128i MSGTMP3_P2;
@@ -551,9 +563,9 @@ const uint64_t num_iters) //-- number of times to SHA256 3x 32bytes given in *ha
    MSGV_P1 = _mm_shuffle_epi32(MSGV_P1,0x0E);
    MSGV_P2 = _mm_shuffle_epi32(MSGV_P2,0x0E);
    MSGV_P3 = _mm_shuffle_epi32(MSGV_P3,0x0E);
-   STATE0_P1 = _mm_sha256rnds2_epu32(STATE0_P1,STATE1_P1,MSGV_P1);
-   STATE0_P2 = _mm_sha256rnds2_epu32(STATE0_P2,STATE1_P2,MSGV_P2);
-   STATE0_P3 = _mm_sha256rnds2_epu32(STATE0_P3,STATE1_P3,MSGV_P3);
+   STATE0_P1 = _mm_sha256rnds2_epu32(STATE0_P1,STATE1_P1,MORE0_CACHE);
+   STATE0_P2 = _mm_sha256rnds2_epu32(STATE0_P2,STATE1_P2,MORE0_CACHE);
+   STATE0_P3 = _mm_sha256rnds2_epu32(STATE0_P3,STATE1_P3,MORE0_CACHE);
    MSGTMP1_P1 = _mm_sha256msg1_epu32(MSGTMP1_P1,MSGTMP2_P1);
    MSGTMP1_P2 = _mm_sha256msg1_epu32(MSGTMP1_P2,MSGTMP2_P2);
    MSGTMP1_P3 = _mm_sha256msg1_epu32(MSGTMP1_P3,MSGTMP2_P3);
@@ -571,9 +583,9 @@ const uint64_t num_iters) //-- number of times to SHA256 3x 32bytes given in *ha
    STATE1_P1 = _mm_sha256rnds2_epu32(STATE1_P1,STATE0_P1,MSGV_P1);
    STATE1_P2 = _mm_sha256rnds2_epu32(STATE1_P2,STATE0_P2,MSGV_P2);
    STATE1_P3 = _mm_sha256rnds2_epu32(STATE1_P3,STATE0_P3,MSGV_P3);
-   MSGTMP0_P1 = _mm_add_epi32(MSGTMP0_P1,_mm_alignr_epi8(MSGTMP3_P1,MSGTMP2_P1,4));
-   MSGTMP0_P2 = _mm_add_epi32(MSGTMP0_P2,_mm_alignr_epi8(MSGTMP3_P2,MSGTMP2_P2,4));
-   MSGTMP0_P3 = _mm_add_epi32(MSGTMP0_P3,_mm_alignr_epi8(MSGTMP3_P3,MSGTMP2_P3,4));
+   MSGTMP0_P1 = _mm_add_epi32(MSGTMP0_P1,MORE1_CACHE);
+   MSGTMP0_P2 = _mm_add_epi32(MSGTMP0_P2,MORE1_CACHE);
+   MSGTMP0_P3 = _mm_add_epi32(MSGTMP0_P3,MORE1_CACHE);
    MSGTMP0_P1 = _mm_sha256msg2_epu32(MSGTMP0_P1,MSGTMP3_P1);
    MSGTMP0_P2 = _mm_sha256msg2_epu32(MSGTMP0_P2,MSGTMP3_P2);
    MSGTMP0_P3 = _mm_sha256msg2_epu32(MSGTMP0_P3,MSGTMP3_P3);
@@ -783,6 +795,10 @@ const uint64_t num_iters) //-- number of times to SHA256 4x 32bytes given in *ha
  const __m128i HPAD0_CACHE = _mm_set_epi64x(0x0000000000000000,0x0000000080000000);
  const __m128i HPAD1_CACHE = _mm_set_epi64x(0x0000010000000000,0x0000000000000000);
 
+ //-- pre-calc/static values
+ const __m128i MORE0_CACHE = _mm_set_epi64x(0x5807AA985807AA98,0x550C7DC3243185BE);
+ const __m128i MORE1_CACHE = _mm_set_epi64x(0x0000000000000000,0x0000000000000000);
+
  //-- variables to calculate SHA256 rounds
  __m128i STATE0_P1; __m128i STATE1_P1; __m128i MSGV_P1; __m128i MSGTMP0_P1; __m128i MSGTMP1_P1; __m128i MSGTMP2_P1; __m128i MSGTMP3_P1;
  __m128i STATE0_P2; __m128i STATE1_P2; __m128i MSGV_P2; __m128i MSGTMP0_P2; __m128i MSGTMP1_P2; __m128i MSGTMP2_P2; __m128i MSGTMP3_P2;
@@ -899,10 +915,10 @@ const uint64_t num_iters) //-- number of times to SHA256 4x 32bytes given in *ha
    MSGV_P2 = _mm_shuffle_epi32(MSGV_P2,0x0E);
    MSGV_P3 = _mm_shuffle_epi32(MSGV_P3,0x0E);
    MSGV_P4 = _mm_shuffle_epi32(MSGV_P4,0x0E);
-   STATE0_P1 = _mm_sha256rnds2_epu32(STATE0_P1,STATE1_P1,MSGV_P1);
-   STATE0_P2 = _mm_sha256rnds2_epu32(STATE0_P2,STATE1_P2,MSGV_P2);
-   STATE0_P3 = _mm_sha256rnds2_epu32(STATE0_P3,STATE1_P3,MSGV_P3);
-   STATE0_P4 = _mm_sha256rnds2_epu32(STATE0_P4,STATE1_P4,MSGV_P4);
+   STATE0_P1 = _mm_sha256rnds2_epu32(STATE0_P1,STATE1_P1,MORE0_CACHE);
+   STATE0_P2 = _mm_sha256rnds2_epu32(STATE0_P2,STATE1_P2,MORE0_CACHE);
+   STATE0_P3 = _mm_sha256rnds2_epu32(STATE0_P3,STATE1_P3,MORE0_CACHE);
+   STATE0_P4 = _mm_sha256rnds2_epu32(STATE0_P4,STATE1_P4,MORE0_CACHE);
    MSGTMP1_P1 = _mm_sha256msg1_epu32(MSGTMP1_P1,MSGTMP2_P1);
    MSGTMP1_P2 = _mm_sha256msg1_epu32(MSGTMP1_P2,MSGTMP2_P2);
    MSGTMP1_P3 = _mm_sha256msg1_epu32(MSGTMP1_P3,MSGTMP2_P3);
@@ -925,10 +941,10 @@ const uint64_t num_iters) //-- number of times to SHA256 4x 32bytes given in *ha
    STATE1_P2 = _mm_sha256rnds2_epu32(STATE1_P2,STATE0_P2,MSGV_P2);
    STATE1_P3 = _mm_sha256rnds2_epu32(STATE1_P3,STATE0_P3,MSGV_P3);
    STATE1_P4 = _mm_sha256rnds2_epu32(STATE1_P4,STATE0_P4,MSGV_P4);
-   MSGTMP0_P1 = _mm_add_epi32(MSGTMP0_P1,_mm_alignr_epi8(MSGTMP3_P1,MSGTMP2_P1,4));
-   MSGTMP0_P2 = _mm_add_epi32(MSGTMP0_P2,_mm_alignr_epi8(MSGTMP3_P2,MSGTMP2_P2,4));
-   MSGTMP0_P3 = _mm_add_epi32(MSGTMP0_P3,_mm_alignr_epi8(MSGTMP3_P3,MSGTMP2_P3,4));
-   MSGTMP0_P4 = _mm_add_epi32(MSGTMP0_P4,_mm_alignr_epi8(MSGTMP3_P4,MSGTMP2_P4,4));
+   MSGTMP0_P1 = _mm_add_epi32(MSGTMP0_P1,MORE1_CACHE);
+   MSGTMP0_P2 = _mm_add_epi32(MSGTMP0_P2,MORE1_CACHE);
+   MSGTMP0_P3 = _mm_add_epi32(MSGTMP0_P3,MORE1_CACHE);
+   MSGTMP0_P4 = _mm_add_epi32(MSGTMP0_P4,MORE1_CACHE);
    MSGTMP0_P1 = _mm_sha256msg2_epu32(MSGTMP0_P1,MSGTMP3_P1);
    MSGTMP0_P2 = _mm_sha256msg2_epu32(MSGTMP0_P2,MSGTMP3_P2);
    MSGTMP0_P3 = _mm_sha256msg2_epu32(MSGTMP0_P3,MSGTMP3_P3);

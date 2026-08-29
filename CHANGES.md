@@ -1,4 +1,13 @@
-# Revisions
+# History
+
+**2026.08.29** - Optimization
+- Added strategic pre-calc, small performance boost.
+- Primarily effective on Intel 15th-gen E-core.
+- Switched to Linux/gcc15 vs gcc12, dropped Clang.
+- Switched to Intel 15th-gen vs 13th-gen CPU.
+- Redid benchmark numbers.
+- Cleaned up text, links and other elements.
+- Previous Zen4-core pipelined numbers wrong, HT topology.
 
 **2024.02.21** - Added ARM
 - Implemented [ARM Cryptography Extensions](https://developer.arm.com/architectures/instruction-sets/intrinsics/#q=sha256).

@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 #include <omp.h>
 
@@ -133,7 +134,7 @@ void local_ParseParameters(int argc,char* argv[])
      local_ghz = true;
      local_ghzval = strtod(argv[i],NULL);
      if(local_ghzval < 0.1 || local_ghzval > 999.9){ local_ghz = false; local_ghzval = 0.0; }
-     local_ghzval = (double)((int)(local_ghzval * 100.0)) / 100.0;
+     local_ghzval = round(local_ghzval * 100.0) / 100.0;
      jP = 0; continue;
      }
 

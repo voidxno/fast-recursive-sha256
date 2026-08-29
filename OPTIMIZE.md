@@ -4,7 +4,7 @@ Walkthrough of optimizations realized in source code of [rsha256_fast_x64.cxx](r
 
 First looked at different implementations of SHA-256 (SHA256). [Pseudocode](https://en.wikipedia.org/wiki/SHA-2#Pseudocode),
 Intel [SHA Extensions](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sha-extensions.html),
-[Linux ASM](https://github.com/torvalds/linux/blob/master/arch/x86/crypto/sha256_ni_asm.S), and more. Candidate for fastest recursive SHA256 quickly became an Intel/AMD CPU with SHA Extensions.
+[Linux ASM](https://github.com/torvalds/linux/blob/master/lib/crypto/x86/sha256-ni-asm.S), and more. Candidate for fastest recursive SHA256 quickly became an Intel/AMD CPU with SHA Extensions.
 
 Below are steps from generic implementation to final result.
 
@@ -55,13 +55,14 @@ Elements adjusted:
 - Realize static nature of 3rd/4th 16 bytes of 1x block (64 bytes)
 - Convert/move/pre-shuffle into 2x static __m128i (HPAD0_CACHE, HPAD1_CACHE)
 - Move/pre-shuffle round init values into 2x static __mm128i (ABEF_INIT, CDGH_INIT)
+- Strategic pre-calc into 2x static __m128i (MORE0_CACHE, MORE1_CACHE)
 - Eliminate SHUF_MASK usage inside loop, only outside
 - Contain hash value through loops in 2x __mm128i (HASH0_SAVE, HASH1_SAVE)
 - Perform init/finish input/output hash values outside loop
 
 Result was the [rsha256_fast_x64.cxx](rsha256_fast_x64.cxx) file.
 
-At this point. Very clean C++ intrinsics implementation. Looks to translate by most compilers to similarly fast binary code.
+At this point. Very clean C++ intrinsics implementation. Translated by most compilers to similarly fast binary code.
 
 ## Compilers
 
@@ -69,7 +70,7 @@ One goal of optimization was writing common source code that produced similar sp
 
 Been a learning experience to see how compilers react wildly differently to how source code is written and organized. Look at reference results in [benchmark](BENCHMARK.md).
 
-Now the fast version of source code is fine tuned to be optimal in itself. Helping and forcing most compilers to produce similar results.
+Now the fast version of source code is finetuned to be optimal in itself. Helping and forcing most compilers to produce similar results.
 Look at fast results in [benchmark](BENCHMARK.md).
 
 ## Result
@@ -92,13 +93,13 @@ Started by having fun running a TimeLord on [MMX blockchain](https://github.com/
 
 Have some programming background. Manage to navigate most areas, but not my daily work. Good at looking at stuff logically, identify patterns, problemsolve.
 
-Real timeline was working step-by-step (there were many) to a final assembler (ASM) source code edition. Got to a point where the result was 0.702 MH/s/0.1GHz (Intel 13th-Gen CPU, P-core, Raptor Cove).
+Real timeline was working step-by-step (there were many) to a final assembler (ASM) source code edition. Got to a point where the result was 0.702 MH/s/0.1GHz (Intel 13th-gen CPU, P-core, Raptor Cove).
 
 Shifted at some point to try contributing by optimizing public C++ source code for SHA256 creation in TimeLord. Already a good SHA256 implementation written by [Max](https://github.com/madMAx43v3r) in C++ intrinsics, using SHA Extensions. Had my private 0.702 (ASM) reference point, knowing it was technically possible.
 
-Grew increasingly frustrated over extreme differences in TimeLord speed, depending on arrangement of source code and compiler used (VS2022, Clang15, gcc12). Wanted parity between platforms, if possible.
+Grew increasingly frustrated over extreme differences in TimeLord speed, depending on arrangement of source code and compiler used (gcc12, Clang15, VS2022). Wanted parity between platforms, if possible.
 
-Tried to understand C++ intrinsics. Wrote my own generic recursive SHA256 edition. Ported all optimizations from my private 0.702 (ASM) edition. Now at 0.708 (VS2022), 0.708 (Clang15), 0.702 (gcc12), look [benchmark](BENCHMARK.md).
+Tried to understand C++ intrinsics. Wrote my own generic recursive SHA256 edition. Ported all optimizations from my private 0.702 (ASM) edition. Got to 0.702 (gcc12), 0.708 (Clang15), 0.708 (VS2022), on Intel 13th-gen P-core.
 
 Ended up here, open sourcing the result.
 
